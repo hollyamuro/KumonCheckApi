@@ -1,0 +1,16 @@
+{
+    "opts": {
+        "encoding": "utf8",
+        "destination": "./docs/",
+        "recurse": true
+    },
+    "templates": {
+        "default": {
+            "outputSourceFiles": false
+        }
+    },
+    "source": {
+        "include": [ "./" ],
+        "exclude": [ "./node_modules/", "./docs/"]
+    }
+}

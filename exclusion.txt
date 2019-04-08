@@ -1,0 +1,2 @@
+D:\KumonCheckINApi\node_modules
+D:\KumonCheckINApi\package-lock.json
