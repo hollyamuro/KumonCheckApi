@@ -11,7 +11,7 @@
 const buildGroupUserModule = () => {
 
 	const ormDB = require("../../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Group_Users", {
+	return ormDB.KumonCheckIN.define("Group_Users", {
 		/* 使用者ID */
 		User_Id: {
 			type: ormDB.sequelize.INTEGER,

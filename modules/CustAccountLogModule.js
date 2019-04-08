@@ -11,7 +11,7 @@
 const Cust_Account_LogModule = () => {
 
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Cust_Account_Log", {
+	return ormDB.KumonCheckIN.define("Cust_Account_Log", {
 		/*INDEX_NO*/
 		INDEX_NO: {
 			type: ormDB.sequelize.STRING,

@@ -16,7 +16,7 @@ module.exports.isUsersExisted = (conditions) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						where: conditions,
@@ -53,7 +53,7 @@ module.exports.getUsersProfile = (conditions) => {
 		viewDeptModule.belongsTo(viewEmployeeModule, { foreignKey: "Dept_No", targetKey: "Dept_No", });
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: [
@@ -108,7 +108,7 @@ module.exports.getEmployeeId = (hashedId) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: ["Employee_Id",],
@@ -139,7 +139,7 @@ module.exports.getUsers = (attributes, conditions) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: attributes,
@@ -166,9 +166,9 @@ module.exports.destroyUser = (conditions) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
-					return ormDB.KumonCheckINWeb.transaction((t) => {
+					return ormDB.KumonCheckIN.transaction((t) => {
 						return userModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw (err); });
@@ -193,9 +193,9 @@ module.exports.createUser = (userModuleDate) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
-					return ormDB.KumonCheckINWeb.transaction((t) => {
+					return ormDB.KumonCheckIN.transaction((t) => {
 						return userModule.create(userModuleDate, { transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw (err); });
@@ -222,7 +222,7 @@ module.exports.validateLocalPassword = (reqEmployeeId, reqPwd) => {
 		const userModule = require("../../modules/system_base/UserModule");
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: [
@@ -302,7 +302,7 @@ module.exports.getPermissionsOfUser = (employeeId) => {
 		groupPermissionModule.belongsTo(groupUserModule, { foreignKey: "Group_Id", targetKey: "Group_Id", });
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: [],
@@ -387,7 +387,7 @@ module.exports.getRolesOfUser = (employeeId) => {
 		groupModule.belongsTo(groupUserModule, { foreignKey: "Id", targetKey: "Group_Id", });
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: [],
@@ -444,7 +444,7 @@ module.exports.getProductsOfUser = (employeeId) => {
 		groupModule.belongsTo(groupUserModule, { foreignKey: "Id", targetKey: "Group_Id", });
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return userModule.findAll({
 						attributes: [],

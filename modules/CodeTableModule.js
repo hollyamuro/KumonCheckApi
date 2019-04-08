@@ -11,7 +11,7 @@
 const CodeTableModule = () => {
 
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("CodeTable",
+	return ormDB.KumonCheckIN.define("CodeTable",
 	 {
 		/*SeqNo*/
 			SeqNo: {

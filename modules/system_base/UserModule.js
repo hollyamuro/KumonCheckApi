@@ -11,7 +11,7 @@
 const buildUserModule = () => {
 
 	const ormDB = require("../../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Users", {
+	return ormDB.KumonCheckIN.define("Users", {
 		/* 使用者ID */
 		Id: {
 			type: ormDB.sequelize.INTEGER,

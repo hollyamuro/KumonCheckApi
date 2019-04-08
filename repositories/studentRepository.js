@@ -17,7 +17,7 @@ module.exports.isStudentExisted = (conditions) => {
 		const StudentModule = require("../modules/studentModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return StudentModule.findAll({
 						where: conditions,
@@ -44,7 +44,7 @@ module.exports.getStudent = (conditions) => {
 		const ormDB = require("../helper/OrmDB");
 		const StudentModule = require("../modules/studentModule");
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return StudentModule.findAll({
 						attributes: 
@@ -79,7 +79,7 @@ module.exports.getStudent = (conditions) => {
 						r[i].office 	= r[i].office.trim();
 						r[i].name 		    = r[i].name.trim();
 						r[i].name_en 	= r[i].name_en;
-						r[i].birth 		= r[i].birth.trim();
+						r[i].birth 		= r[i].birth;
 						r[i].sex 	= r[i].sex.trim();
 						r[i].address		= r[i].address;
 						r[i].email 	= r[i].email.trim();
@@ -90,8 +90,8 @@ module.exports.getStudent = (conditions) => {
 						r[i].class_time		= r[i].class_time.trim();
 						r[i].class_type 	= r[i].class_type.trim();
 						r[i].class_level 		    = r[i].class_level.trim();
-						r[i].create_date 	= r[i].create_date.trim();
-						r[i].edit_date 		= r[i].edit_date.trim();
+						r[i].create_date 	= r[i].create_date;
+						r[i].edit_date 		= r[i].edit_date;
 						r[i].edit_user 	= r[i].edit_user.trim();
 					}
 					resolve(r); 
@@ -118,7 +118,7 @@ module.exports.getEmployee = (attributes, conditions) => {
 		const CustModule = require("../modules/CustModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return CustModule.findAll({
 						attributes: attributes,
@@ -151,7 +151,7 @@ module.exports.getCustDetail = (conditions) => {
 		CustAccountModule.belongsTo(CustModule, { foreignKey: "account",  targetKey: "account_no", });
 
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return CustModule.findAll({
 						attributes: 
@@ -206,9 +206,9 @@ module.exports.createEmployee = (Employee) => {
 		const CustModule = require("../modules/CustModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction((t)=>{
+					return ormDB.KumonCheckIN.transaction((t)=>{
 						let promises = [];
 
 						for(let i=0; i<Employee.length; i++){
@@ -239,9 +239,9 @@ module.exports.destroyEmployee = (conditions) => {
 		const CustModule = require("../modules/CustModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return CustModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 
@@ -277,7 +277,7 @@ module.exports.getPermissionsOfCust = (account_no, sino_account) => {
 		custGroupPermissionsModule.belongsTo(custGroupModule, { foreignKey: "Group_Id",  targetKey: "Id", });
 	
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupModule.findAll({
 						attributes: [],
@@ -353,7 +353,7 @@ module.exports.getRolesOfCust = (account_no, sino_account) => {
 		custGroupUserModule.belongsTo(custGroupModule, { foreignKey: "Group_Id",  targetKey: "Id", });
 
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupModule.findAll({
 						raw: true,
@@ -400,7 +400,7 @@ module.exports.getProductsOfCust = (account_no, sino_account) => {
 		custGroupUserModule.belongsTo(custGroupModule, { foreignKey: "Group_Id",  targetKey: "Id", });
 
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupModule.findAll({
 						raw: true,

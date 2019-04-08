@@ -14,7 +14,7 @@
  */
 module.exports.checkin =  async (req, res, next) => 
 {
-
+	const nodemailer = require('nodemailer');
 	const axios = require("axios");
 	const messageHandler = require("../helper/MessageHandler");
 	const CheckInRepository=require("../repositories/checkinRepository");
@@ -31,41 +31,74 @@ module.exports.checkin =  async (req, res, next) =>
 	if(!req.body.data.hasOwnProperty("ID") || req.body.data.ID === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.data.hasOwnProperty("office") || req.body.data.office === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	//prepare data
-	const cust_mailapi = config[process.env.NODE_ENV].Cust_MailServer.policy + "://" + 
-	config[process.env.NODE_ENV].Cust_MailServer.host + ":" + config[process.env.NODE_ENV].Cust_MailServer.port+"/"+config[process.env.NODE_ENV].Cust_MailServer.api;
-	const service_mailapi = config[process.env.NODE_ENV].local_MailServer.policy + "://" + 
-	config[process.env.NODE_ENV].local_MailServer.host + ":" + config[process.env.NODE_ENV].local_MailServer.port+"/"+config[process.env.NODE_ENV].local_MailServer.api;
-	const date = new Date();
-	const checkinconditions={"date":format("yyyyMMdd",date),"ID":req.body.data.ID};
+	let strtoday = dateFormat.asString("yyyy/MM/dd hh:mm:ss", new Date());
+	let checkinconditions={"date":strtoday,"ID":req.body.data.ID,"type":"kumon"};//學生預設kumon，employee則抓type欄位
 	try{
 		//get Id's type
 		let strType=req.body.data.ID.substr(0,2);
 		let blExsist=false;
-		const Checkconditions={"ID":req.body.data.ID};
+		let blHasClass=false;
+		let userdata={};
+		
+		 //{ "date":yyyyMMdd,"ID":ID,"office":office,"type"=type },
 		if(strType=="ST")//學生 StudentRepository
 		{
-			blExsist=StudentRepository.isStudentExisted({"ID":req.body.data.ID})
+			debug("學生"+strType);
+			blExsist=await StudentRepository.isStudentExisted({"ID":req.body.data.ID});
 			if(blExsist==false)
 			{
-				throw(new Error("ERROR_WRONG_ACCOUNT_OR_PASSWORD"));
+				throw(new Error("ERROR_WRONG_ACCOUNT"));
 			}
+			userdata=await StudentRepository.getStudent({"ID":req.body.data.ID});
 			//check是否今日有打卡登入 
-			//conditions 查詢條件，eg:  { "date":yyyyMMdd,"ID":ID,"office":office,"type"=type },
-
-
-			CheckInRepository
+			blHasClass=await CheckInRepository.isCheckInExisted(checkinconditions);
+			if(blHasClass==false)
+			{
+				throw(new Error("ERROR_NOT_FOUND"));	
+			}
 		}
 		else if(strType="EM")//員工 EmployeeRepository
 		{
-			EmployeeRepository
+			debug("員工"+strType);
+			blExsist=await EmployeeRepository.isEmployeeExisted({"ID":req.body.data.ID})
+			if(blExsist==false)
+			{
+				throw(new Error("ERROR_WRONG_ACCOUNT"));
+			}
+			userdata=await EmployeeRepository.getEmployee({"ID":req.body.data.ID});
+			checkinconditions.type=userdata.type.toString();
+			//check是否今日有打卡登入 
+			blHasClass=await CheckInRepository.isCheckInExisted(checkinconditions);
+			if(blHasClass==false)
+			{
+				throw(new Error("ERROR_NOT_FOUND"));	
+			}
 		}
+		let CheckInmail_json=mailjson.CheckInmail(mailjson.adminEmail,req.body.data.ID,"");
 
-			
-			
-				throw(new Error("ERROR_WRONG_ACCOUNT_OR_PASSWORD"));
+		let mailTransport = nodemailer.createTransport(config[process.env.NODE_ENV].Cust_MailServer.host, {
+			service: config[process.env.NODE_ENV].Cust_MailServer.service,
+			auth: {
+				user: config[process.env.NODE_ENV].Cust_MailServer.user,
+				pass: config[process.env.NODE_ENV].Cust_MailServer.password
+			}
+			});
+		debug("寄送郵件");
+		await mailTransport.sendMail({
+			CheckInmail_json
+			  }, function(err){
+				if(err) {
+					throw(new Error("ERROR_SEND_MAIL"));
+				}
+			  });
+		res.send({  
+			"code" : messageHandler.infoHandler("INFO_TOKEN_SUCCESS"), 
+			"data": return_prototype,
+		});
 			
 	}
 	catch(err){
+		debug("打卡失敗"+err)
 		next(err); 
 	} 
 };

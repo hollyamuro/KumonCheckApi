@@ -11,7 +11,7 @@
 const CustPwdResetModule = () => {
 
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Cust_Pwd_Reset", {
+	return ormDB.KumonCheckIN.define("Cust_Pwd_Reset", {
 		/*INDEX_NO*/
 		INDEX_NO: {
 			type: ormDB.sequelize.INTEGER,

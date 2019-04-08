@@ -15,8 +15,8 @@ module.exports = {
 
 		/* Database setting */
 		database_config: {
-			KumonCheckINWeb: {
-				database: "KumonCheckINWeb",
+			KumonCheckIN: {
+				database: "KumonCheckIN",
 				username: "apowner",
 				password: "ok1234",
 				options: {

@@ -40,9 +40,9 @@ module.exports.foreverCheck = function() {
 	const axios = require("axios");
 
 	forever.list("", function(err, results) {
-		let server_path =   config[process.env.NODE_ENV].KumonCheckInWeb.policy + "://" + 
-                            config[process.env.NODE_ENV].KumonCheckInWeb.host + ":" + 
-                            config[process.env.NODE_ENV].KumonCheckInWeb.port;
+		let server_path =   config[process.env.NODE_ENV].KumonCheckINWeb.policy + "://" + 
+                            config[process.env.NODE_ENV].KumonCheckINWeb.host + ":" + 
+                            config[process.env.NODE_ENV].KumonCheckINWeb.port;
 
 		let mail_api_path = "/api/mail_controller/send";
 		if (results === "{}" || results === "undefined" || results === null) {

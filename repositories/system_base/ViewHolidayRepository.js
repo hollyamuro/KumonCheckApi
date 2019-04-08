@@ -23,7 +23,7 @@ module.exports.getWorkDay = function (date, offset) {
         //return new Promise(function(resolve, reject){
         return new Promise(function (resolve) {
             //(0) check connection
-            ormDB.KumonCheckINWeb.authenticate()
+            ormDB.KumonCheckIN.authenticate()
                 //(1) get holiday list
                 .then(() => {
                     return viewHolidayModule.findAll({
@@ -102,7 +102,7 @@ module.exports.getNegWorkDay = function (date, offset) {
         //return new Promise(function(resolve, reject){
         return new Promise(function (resolve) {
             //(0) check connection
-            ormDB.KumonCheckINWeb.authenticate()
+            ormDB.KumonCheckIN.authenticate()
                 //(1) get holiday list
                 .then(() => {
                     return viewHolidayModule.findAll({

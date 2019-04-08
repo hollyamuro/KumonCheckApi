@@ -7,8 +7,8 @@
  */
 module.exports.adminEmail = () => 
 {
-	let maillist="hollyamuro.lin@sinopac.com;jcarter.chang@sinopac.com;tac.chen@sinopac.com";
-	let maillist_prod="carl.sun@sinopac.com;chenghan.yang@sinopac.com";
+	let maillist="hollyamuro@gmail.com;elane1108@gmail.com";
+	let maillist_prod="hollyamuro@gmail.com;elane1108@gmail.com";
 	if(process.env.NODE_ENV !== "production")
 		return maillist;
 	else
@@ -35,12 +35,12 @@ module.exports.disclaimerCH=()=>
 
 
 /**
- * invitemail
+ * Check in mail
  * @param  {} mail box about receivers
  * @param  {} user account
  * @param  {} invite url link
  */
-module.exports.invitemail = (receivers,account,url) => 
+module.exports.CheckInmail = (receivers,account,url) => 
 {
 	const mailmodule= require("./KumonCheckInMail");
 	const config = require("../Config");
@@ -48,11 +48,10 @@ module.exports.invitemail = (receivers,account,url) =>
 	let disclaimeren=mailmodule.disclaimerEn();
 	let mail_json={
 		"from":config[process.env.NODE_ENV].Cust_MailServer.from,
-		"receivers":receivers,
-		"subject":"SinoPac Securities OSU Online Custody Service Invitation",
-		"content":"<html><body>親愛的客戶，您好：<br>您的託管帳號："+account+"<br><br>    感謝您申請永豐金證券國際證券業務分公司託管帳戶網路查詢服務。<br>請自系統寄發認證連結網址之通知時間起，於一個工作日內至以下網址完成認證：<br><br>"+url+
-        "<br><br>    如有任何問題，請與業務人員聯繫。<br>        感謝您 <br><br>"+disclaimerch+"<br><br>                                                 永豐金證券股份有限公司　國際證券業務分公司<br><br><br>"+
-        "Dear Customer,<br>Your Custody Account No. :"+account+"<br><br>Thanks for your application.<br>Please click the following link to verify your account and password within 1 business day of receiving the verification code.<br><br>"+url+"<br><br>If you have any question, please contact with your sales.<br><br>Thank you.<br><br>"+disclaimeren+"<br><br>                                                 SinoPac Securities Corporation Offshore Securities Unit<br><br><br><img src=\"logo.png\"/></body></html>"
+		"to":receivers,
+		"subject":"Kumon Checkin Notification",
+		"html":"<html><body>您好：<br>帳號："+account+"<br><br>    已經於功文教室打卡成功。<br><br>    如有任何問題，請與業務人員聯繫。<br>        感謝您 <br><br>"+disclaimerch+"<br><br>                                                Kumon文教機構淡水分支機構<br><br><br>"+
+        "Dear Customer,<br>Account No. :"+account+"<br><br>Has Check_In Success.<br>Thank you.<br><br>"+disclaimeren+"<br><br>                                                 Kumon Corporation Tanshui Class office<br><br><br><img src=\"logo.png\"/></body></html>"
 		,"attachments": [
 			{
 				"filename": "logo.png",

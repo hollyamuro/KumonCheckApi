@@ -53,9 +53,6 @@ const packageHandler = () => {
 	}));
 	app.use(helmet.frameguard({ action: 'deny' }));
 
-	/* JWT check */
-	app.use(require(path.resolve(__dirname,"./helper/JwtCheck")));
-
 	/* setting api routers */
 	require("./routes/ServiceRoute")(app);
 	require("./routes/CustRoute")(app);

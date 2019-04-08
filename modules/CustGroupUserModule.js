@@ -12,7 +12,7 @@
 module.exports = (() => {
 
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Cust_Group_Users", {
+	return ormDB.KumonCheckIN.define("Cust_Group_Users", {
 		/* 客戶ID */
 		Account_No: {
 			type: ormDB.sequelize.STRING,

@@ -32,7 +32,7 @@ module.exports.updateJwtKey = async (req, res, next) => {
 
 		await JWTKeyRepository.updateJwtKey(
 			{ "JwtKey": 	RandomStr2, },
-			{ "SystemType":	"KumonCheckINWeb" ,});
+			{ "SystemType":	"KumonCheckIN" ,});
 		
 		res.send({	
 			"code": messageHandler.infoHandler("INFO_READ_DATA_SUCCESS"),

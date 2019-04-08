@@ -196,7 +196,7 @@ module.exports.login =  async (req, res, next) => {
 				"permission_list": 	permission,
 				"product_list":		products,
 				"role_list":		roles,
-				"system":			"KumonCheckINWeb",
+				"system":			"KumonCheckIN",
 			};
 
 			jwt_sign_prototype = {
@@ -205,7 +205,7 @@ module.exports.login =  async (req, res, next) => {
 			
 			const local = config[process.env.NODE_ENV].JwtService_api.policy + "://" + config[process.env.NODE_ENV].JwtService_api.host + ":" + config[process.env.NODE_ENV].JwtService_api.port;
 			//get token
-			const token = await axios.post(local + "/api/sign", { "data": jwt_sign_prototype, "system": "KumonCheckINWeb",});
+			const token = await axios.post(local + "/api/sign", { "data": jwt_sign_prototype, "system": "KumonCheckIN",});
 			debug(token.data.data);
 			return_prototype["access_token"] = token.data.data;
 
@@ -257,7 +257,7 @@ module.exports.verify =  async (req, res, next) => {
 		};
 
 		const local = config[process.env.NODE_ENV].JwtService_api.policy + "://" + config[process.env.NODE_ENV].JwtService_api.host + ":" + config[process.env.NODE_ENV].JwtService_api.port;
-		const jwt_user_data = await axios.post(local + "/api/verify", { "token": req.body.token, "system": "KumonCheckINWeb",});
+		const jwt_user_data = await axios.post(local + "/api/verify", { "token": req.body.token, "system": "KumonCheckIN",});
 
 		if(jwt_user_data.data.login){
 			const EmployeeId = await userRepository.getEmployeeId(jwt_user_data.data.user);
@@ -281,14 +281,14 @@ module.exports.verify =  async (req, res, next) => {
 					"permission_list": 	permission,
 					"product_list":		products,
 					"role_list":		roles,
-					"system":			"KumonCheckINWeb",
+					"system":			"KumonCheckIN",
 				};
 
 				jwt_sign_prototype = {
 					"user":  			userProfile[0].u_hid, 
 				};
 
-				const token = await axios.post(local + "/api/sign", { "data": jwt_sign_prototype, "system": "KumonCheckINWeb",});
+				const token = await axios.post(local + "/api/sign", { "data": jwt_sign_prototype, "system": "KumonCheckIN",});
 				if(token.data.code.type === "ERROR") {
 					throw(new Error("ERROR_TOKEN"));
 				}else{

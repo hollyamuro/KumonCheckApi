@@ -17,7 +17,7 @@ module.exports.isEmployeeExisted = (conditions) => {
 		const EmployeeModule = require("../modules/employeeModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return EmployeeModule.findAll({
 						where: conditions,
@@ -44,7 +44,7 @@ module.exports.getEmployee = (conditions) => {
 		const ormDB = require("../helper/OrmDB");
 		const EmployeeModule = require("../modules/employeeModule");
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return EmployeeModule.findAll({
 						attributes: 
@@ -80,7 +80,7 @@ module.exports.getEmployee = (conditions) => {
 						r[i].office 	= r[i].office.trim();
 						r[i].name 		    = r[i].name.trim();
 						r[i].name_en 	= r[i].name_en;
-						r[i].birth 		= r[i].birth.trim();
+						r[i].birth 		= r[i].birth;
 						r[i].sex 	= r[i].sex.trim();
 						r[i].address		= r[i].address;
 						r[i].email 	= r[i].email.trim();
@@ -92,8 +92,8 @@ module.exports.getEmployee = (conditions) => {
 						r[i].type 	= r[i].type.trim();
 						r[i].work_date 		    = r[i].work_date.trim();
 						r[i].work_time 		    = r[i].work_time.trim();
-						r[i].create_date 	= r[i].create_date.trim();
-						r[i].edit_date 		= r[i].edit_date.trim();
+						r[i].create_date 	= r[i].create_date;
+						r[i].edit_date 		= r[i].edit_date;
 						r[i].edit_user 	= r[i].edit_user.trim();
 					}
 					resolve(r); 
@@ -119,9 +119,9 @@ module.exports.destroyEmployee = (conditions) => {
 		const EmployeeModule = require("../modules/employeeModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return EmployeeModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 

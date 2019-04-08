@@ -17,7 +17,7 @@ module.exports.isCustGroupPermissionsExisted = (conditions) => {
 		const custGroupPermissionsModule = require("../modules/CustGroupPermissionsModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupPermissionsModule.findAll({
 						where: conditions,
@@ -45,7 +45,7 @@ module.exports.getCustGroupPermissions = (attributes, conditions) => {
 		const custGroupPermissionsModule = require("../modules/CustGroupPermissionsModule");
 			
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupPermissionsModule.findAll({
 						attributes: attributes,
@@ -72,9 +72,9 @@ module.exports.createCustGroupPermissions = (custGroupPermissionModuleDataList) 
 		const custGroupPermissionsModule = require("../modules/CustGroupPermissionsModule");
 		 
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t){
+					return ormDB.KumonCheckIN.transaction(function (t){
 						let promises = [];
 						for(let i=0; i<custGroupPermissionModuleDataList.length; i++){
 							promises.push(custGroupPermissionsModule.create( custGroupPermissionModuleDataList[i], { transaction: t, }));
@@ -105,9 +105,9 @@ module.exports.destroyCustGroupPermissions = (conditions) => {
 		const custGroupPermissionsModule = require("../modules/CustGroupPermissionsModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return custGroupPermissionsModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 

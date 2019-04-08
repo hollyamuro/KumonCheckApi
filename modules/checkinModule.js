@@ -11,7 +11,7 @@
 const buildcheckinModule = () => {
 
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("check_in", {
+	return ormDB.KumonCheckIN.define("check_in", {
 		date: {
 			type: ormDB.sequelize.STRING,
 			primaryKey: true
@@ -37,7 +37,7 @@ const buildcheckinModule = () => {
 		checkin_time: {
 			type: ormDB.sequelize.STRING,
 		},
-		checkin_office: {
+		checkin_offic: {
 			type: ormDB.sequelize.STRING,
 		},
 		checkout_time: {

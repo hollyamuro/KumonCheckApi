@@ -10,7 +10,7 @@
  */
 module.exports = (() => {
 	const ormDB = require("../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Cust_Groups", {
+	return ormDB.KumonCheckIN.define("Cust_Groups", {
 		/* 群組ID */
 		Id: {
 			type: ormDB.sequelize.INTEGER,

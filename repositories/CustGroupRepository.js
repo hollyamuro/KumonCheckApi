@@ -17,7 +17,7 @@ module.exports.isCustGroupsExisted = (conditions) => {
 		const custGroupModule = require("../modules/CustGroupModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupModule.findAll({
 						where: conditions,
@@ -45,7 +45,7 @@ module.exports.getCustGroups = (attributes, conditions) => {
 		const custGroupModule = require("../modules/CustGroupModule");
 				
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return custGroupModule.findAll({
 						attributes: attributes,
@@ -73,9 +73,9 @@ module.exports.createCustGroup = (custGroupModuleData) => {
 		const custGroupModule = require("../modules/CustGroupModule");
 				
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t){
+					return ormDB.KumonCheckIN.transaction(function (t){
 						return custGroupModule.create(custGroupModuleData, {transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 
@@ -100,9 +100,9 @@ module.exports.destroyCustGroup = (conditions) => {
 		const custGroupModule = require("../modules/CustGroupModule");
 				
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return custGroupModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 
@@ -130,9 +130,9 @@ module.exports.setCustGroup = (custGroupModuleData, conditions) => {
 		const custGroupModule = require("../modules/CustGroupModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return custGroupModule.update( custGroupModuleData, { where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 

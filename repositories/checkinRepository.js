@@ -17,9 +17,9 @@ module.exports.isCheckInExisted = (conditions) => {
 		const checkinModule = require("../modules/checkinModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
-					return CustsModule.findAll({
+					return checkinModule.findAll({
 						where: conditions,
 						raw: true,
 					});
@@ -44,7 +44,7 @@ module.exports.CheckIn = (conditions) => {
 		const ormDB = require("../helper/OrmDB");
 		const CustModule = require("../modules/CustModule");
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {    
 					return CustModule.findAll({
 						attributes: 
@@ -91,9 +91,9 @@ module.exports.destroyCusts = (conditions) => {
 		const checkinModule = require("../modules/checkinModule");
 		
 		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {  
-					return ormDB.KumonCheckINWeb.transaction(function (t) {
+					return ormDB.KumonCheckIN.transaction(function (t) {
 						return checkinModule.destroy({ where: conditions, transaction: t, })
 							.then(() => { resolve(); })
 							.catch((err) => { throw(err); }); 

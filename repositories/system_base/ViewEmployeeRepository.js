@@ -22,7 +22,7 @@ module.exports.getEmployees = (conditions) => {
 		viewDeptModule.belongsTo(viewEmployeeModule, { foreignKey: "Dept_No", targetKey: "Dept_No", });
 
 		return new Promise((resolve, reject) => {
-			ormDB.KumonCheckINWeb.authenticate()
+			ormDB.KumonCheckIN.authenticate()
 				.then(() => {
 					return viewEmployeeModule.findAll({
 						attributes: [

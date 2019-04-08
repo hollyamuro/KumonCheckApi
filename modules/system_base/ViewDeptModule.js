@@ -11,7 +11,7 @@
 const buildViewDeptModule = () => {
 
 	const ormDB = require("../../helper/OrmDB");
-	return ormDB.KumonCheckINWeb.define("Depts", {
+	return ormDB.KumonCheckIN.define("Depts", {
 		/* 部門標號 */
 		Dept_No: {
 			type: ormDB.sequelize.STRING,

@@ -17,8 +17,8 @@ module.exports = {
 
 		/* Database setting */
 		database_config: {
-			KumonCheckINWeb: {
-				database: "KUMONCHICKIN",
+			KumonCheckIN: {
+				database: "KUMONCHICK",
 				username: "apuser",
 				password: "Elane1108",
 				options: {
@@ -29,17 +29,17 @@ module.exports = {
 				}
 			},
 		},
-		KumonCheckInWeb: {
+		KumonCheckINWeb: {
 			host: "localhost",    //for local dev
 			port: "8084",
 			policy: "http",
 		},
 		Cust_MailServer: {
 			//對外mail server
-			host: "localhost",
-			port: "8008",
-			policy: "http",
-			api: "api/mail_controller/send/",
+			host: "SMTP",
+			service: "Gmail",
+			user: "transamsu@gmail.com",
+			password: "855191108",
 		}
 	},
 };
