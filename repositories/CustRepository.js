@@ -120,11 +120,11 @@ module.exports.getCustDetail = (conditions) => {
 	{
 		const ormDB = require("../helper/OrmDB");
 		const CustModule = require("../modules/CustModule");
-		const CustAccountModule = require("../modules/CustAccountModule");
+		const EmpAccountModule = require("../modules/EmpAccountModule");
 
 		//associations
-		CustModule.hasMany(CustAccountModule, { foreignKey: "account",  sourceKey: "account_no", });
-		CustAccountModule.belongsTo(CustModule, { foreignKey: "account",  targetKey: "account_no", });
+		CustModule.hasMany(EmpAccountModule, { foreignKey: "account",  sourceKey: "account_no", });
+		EmpAccountModule.belongsTo(CustModule, { foreignKey: "account",  targetKey: "account_no", });
 
 		return new Promise( (resolve, reject ) => {
 			ormDB.KumonCheckIN.authenticate()
@@ -143,7 +143,7 @@ module.exports.getCustDetail = (conditions) => {
 						where: conditions,
 						raw: true,
 						include: [
-							{   model: CustAccountModule, 
+							{   model: EmpAccountModule, 
 								attributes: [ ["status", "ca_status" ] ],
 								where: {
 									[ormDB.op.and]: ormDB.sequelize.where(

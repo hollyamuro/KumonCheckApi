@@ -35,44 +35,59 @@ module.exports.isCheckInExisted = (conditions) => {
 
 /**
  * 打卡。
- * @param  {Object} conditions 查詢條件，eg: { "date":yyyyMMdd,"ID":ID,"office":office,"type"=type,"checkin_time" },
- * @return {Array.<Object>} 取得之客戶資料。
+ * @param  {Object} conditions 查詢條件，eg: {"key":key,"operator":"=<>","value":"123124125",....},
+ * @return {Array.<Object>} 。
  */
-module.exports.CheckIn = (conditions) => {
+module.exports.CheckIn = (conditions,values) => {
 	try
 	{
+		const utility=require("../helper/Utility");
 		const ormDB = require("../helper/OrmDB");
-		const CustModule = require("../modules/CustModule");
-		return new Promise( (resolve, reject ) => {
-			ormDB.KumonCheckIN.authenticate()
-				.then(() => {    
-					return CustModule.findAll({
-						attributes: 
-						[
-							["account_no", 	"account_no"], 
-							["account_name", "account_name"], 
-							["sino_account", "sino_account"], 
-							["email", "email"], 
-							["acc_status", "acc_status"], 
-							["acc_type", "acc_type"], 
-						],
-						where: conditions,
-						order: ["account_no"],
-						raw: true,
-					});
+		let count=0;
+		let where="";
+		let i=0;
+		let sql = 
+		`
+			DECLARE @date AS datetime
+			DECLARE @office AS varchar(15)
+			DECLARE @emp AS varchar(15)
+			set @date=?
+			set @office=?
+			set @emp=?
+			UPDATE check_in set
+			checkin_time=CASE WHEN checkin_time='19000101' THEN @date ELSE checkin_time END,
+			checkin_offic=CASE WHEN checkin_time='19000101' THEN @office ELSE checkin_offic END ,
+			checkout_time=@date,
+			checkout_offic=@office,
+			edit_date=getdate(),
+			edit_user=@emp
+			where 1=1
+		`;
+		for(count=0;count<conditions.length;count++)
+		{
+			where=where+" and "+conditions[count].key+conditions[count].operator+"'"+conditions[count].value+"'";
+		}
+		sql=sql+where;
+		return new Promise((resolve, reject)=> {
+			return ormDB.KumonCheckIN.authenticate()
+				.then(() => {   
+					return ormDB.KumonCheckIN.query(sql, 
+						{ 
+							replacements: [
+								values.datetime,
+								values.office,
+								values.editor,
+							], 
+							type: ormDB.sequelize.QueryTypes.UPDATE ,
+							raw: true,
+						}
+					);  
 				})
-				.then((r) => { 
-					for(let i = 0; i < r.length; i++){
-						r[i].account_no		= r[i].account_no.trim();
-						r[i].account_name 	= r[i].account_name.trim();
-						r[i].email 		    = r[i].email.trim();
-						r[i].acc_status 	= r[i].acc_status.trim();
-						r[i].acc_type 		= r[i].acc_type.trim();
-						r[i].sino_account 	= r[i].sino_account.trim();
-					}
-					resolve(r); 
+				.then(()=>{
+					resolve();
 				})
-				.catch((err) => { reject(err); }); 
+				.catch((err) => { reject(err); 
+				}); 
 		});
 	}
 	catch(err){

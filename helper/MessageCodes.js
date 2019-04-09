@@ -40,8 +40,8 @@ module.exports = {
 		"ERROR_OVERFLOW_DATE":				{ "type": "ERROR", "title": "System Message", "message":  "Date Not Within Allowable Inquiry Period.", },
 
 		/*Verify */
-		"ERROR_TOKEN_NOT_FOUND":            { "type": "ERROR", "title": "System Message", "message":  "Invalid verification link.", },
-		"ERROR_TOKEN_EXPIRED":              { "type": "ERROR", "title": "System Message", "message":  "Invalid verification link.", },
+		"ERROR_TOKEN_NOT_FOUND":            { "type": "ERROR", "title": "System Message", "message":  "Invalid Login.", },
+		"ERROR_TOKEN_EXPIRED":              { "type": "ERROR", "title": "System Message", "message":  "Login timeout,please re-login.", },
 		"ERROR_TOKEN_INVALID":              { "type": "ERROR", "title": "System Message", "message":  "You have tried the verification link  3 times and not complete the register process.", },
 		"ERROR_EMAIL_INVALID":              { "type": "ERROR", "title": "System Message", "message":  "The email not matched.", },
 		"ERROR_EMAIL_UNMATCH":              { "type": "ERROR", "title": "System Message", "message":  "The email not matched.", },

@@ -36,8 +36,8 @@ module.exports = {
 		},
 		Cust_MailServer: {
 			//對外mail server
-			host: "SMTP",
-			service: "Gmail",
+			host: "smtp.googlemail.com",
+			port: 465,
 			user: "transamsu@gmail.com",
 			password: "855191108",
 		}

@@ -7,7 +7,7 @@
 "use strict";
 /**
  * 學生打卡
- * @param  {} req 輸入data{"ID:"客戶帳號","office":"所在教室"}，requester{EM_Account}
+ * @param  {} req 輸入data{"ID:"客戶帳號","office":"所在教室","token":"登入Token"}，requester{EM_Account}
  * @param  {} res { "code" : { "type": "xxx", "message":  "xxxxx", }, "data" :  "verify test ok" }
  * @param  {} next 無
  * @see /api/student/checkin
@@ -20,27 +20,40 @@ module.exports.checkin =  async (req, res, next) =>
 	const CheckInRepository=require("../repositories/checkinRepository");
 	const EmployeeRepository = require("../repositories/employeeRepository");
 	const StudentRepository = require("../repositories/studentRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const debug = require("debug")("KumonCheckINApi:CustAccountService.checkin");
 	const config = require("../Config");
 	const utility=require("../helper/Utility");
 	const dateFormat = require("date-format");
 	const mailjson=require("../helper/KumonCheckInMail");
+	const crypto = require("crypto");
 	// check parameters
 	if(!req.body.hasOwnProperty("data")) throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.hasOwnProperty("requester") || req.body.requester === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.data.hasOwnProperty("ID") || req.body.data.ID === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.data.hasOwnProperty("office") || req.body.data.office === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
+	if(!req.body.data.hasOwnProperty("token") || req.body.data.token === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	//prepare data
 	let strtoday = dateFormat.asString("yyyy/MM/dd hh:mm:ss", new Date());
-	let checkinconditions={"date":strtoday,"ID":req.body.data.ID,"type":"kumon"};//學生預設kumon，employee則抓type欄位
+	let checkinconditions={"date":strtoday,"ID":req.body.data.ID,'office':req.body.data.office,"type":"kumon"};//學生預設kumon，employee則抓type欄位
 	try{
+		//check login
+		let bllogin=await EmpAccountRepository.isEmpAccountsExisted({"token":req.body.data.token});
+		if(bllogin==false)
+		{
+			throw(new Error("ERROR_TOKEN_NOT_FOUND"));
+		}
+		let empaccount=await EmpAccountRepository.getEmp_Account({"token":req.body.data.token});
+		let dtexpire=new Date(empaccount[0].expire.toString());
+		if(dtexpire<Date.now())
+		{
+			throw(new Error("ERROR_TOKEN_EXPIRED"));
+		}
 		//get Id's type
 		let strType=req.body.data.ID.substr(0,2);
 		let blExsist=false;
 		let blHasClass=false;
 		let userdata={};
-		
-		 //{ "date":yyyyMMdd,"ID":ID,"office":office,"type"=type },
 		if(strType=="ST")//學生 StudentRepository
 		{
 			debug("學生"+strType);
@@ -50,12 +63,6 @@ module.exports.checkin =  async (req, res, next) =>
 				throw(new Error("ERROR_WRONG_ACCOUNT"));
 			}
 			userdata=await StudentRepository.getStudent({"ID":req.body.data.ID});
-			//check是否今日有打卡登入 
-			blHasClass=await CheckInRepository.isCheckInExisted(checkinconditions);
-			if(blHasClass==false)
-			{
-				throw(new Error("ERROR_NOT_FOUND"));	
-			}
 		}
 		else if(strType="EM")//員工 EmployeeRepository
 		{
@@ -67,33 +74,54 @@ module.exports.checkin =  async (req, res, next) =>
 			}
 			userdata=await EmployeeRepository.getEmployee({"ID":req.body.data.ID});
 			checkinconditions.type=userdata.type.toString();
-			//check是否今日有打卡登入 
-			blHasClass=await CheckInRepository.isCheckInExisted(checkinconditions);
-			if(blHasClass==false)
-			{
-				throw(new Error("ERROR_NOT_FOUND"));	
-			}
 		}
-		let CheckInmail_json=mailjson.CheckInmail(mailjson.adminEmail,req.body.data.ID,"");
-
-		let mailTransport = nodemailer.createTransport(config[process.env.NODE_ENV].Cust_MailServer.host, {
-			service: config[process.env.NODE_ENV].Cust_MailServer.service,
+		//check是否今日有打卡登入 
+		blHasClass=await CheckInRepository.isCheckInExisted(checkinconditions);
+		if(blHasClass==false)
+		{
+			throw(new Error("ERROR_NOT_FOUND"));	
+		}
+		let conditions_checkin=[{"key":"date","operator":"=","value":dateFormat.asString("yyyy/MM/dd", new Date())},
+			{"key":"ID","operator":"=","value":req.body.data.ID},
+			{"key":"office","operator":"=","value":req.body.data.office}];
+		let value_checkin={"datetime":dateFormat.asString("yyyy/MM/dd hh:mm:ss", new Date()),
+							"office":req.body.data.office,
+							"editor":req.body.requester}
+		let blCheckSuccess=await CheckInRepository.CheckIn(conditions_checkin,value_checkin);
+		if(blCheckSuccess==false)
+		{
+			throw(new Error("ERROR_ACTION_Fail"));	
+		}
+		let maillist=mailjson.adminEmail();
+		let CheckInmail_json=[];
+		for(let i=0;i<maillist.length;i++)
+		{
+			CheckInmail_json.push(mailjson.CheckInmail(maillist[i],req.body.data.ID,""));
+		}
+		let mailTransport = nodemailer.createTransport({
+			host:config[process.env.NODE_ENV].Cust_MailServer.host, 
+			port: config[process.env.NODE_ENV].Cust_MailServer.port,
+			secure:true,
 			auth: {
 				user: config[process.env.NODE_ENV].Cust_MailServer.user,
 				pass: config[process.env.NODE_ENV].Cust_MailServer.password
 			}
 			});
 		debug("寄送郵件");
-		await mailTransport.sendMail({
-			CheckInmail_json
-			  }, function(err){
-				if(err) {
+		for(let i=0;i<CheckInmail_json.length;i++)
+		{
+			await mailTransport.sendMail(CheckInmail_json[i], (error, info) => 
+			{
+				if (error) {
+					return console.log(error);
 					throw(new Error("ERROR_SEND_MAIL"));
 				}
-			  });
+				debug("寄送郵件 成功");
+			});
+		}
 		res.send({  
 			"code" : messageHandler.infoHandler("INFO_TOKEN_SUCCESS"), 
-			"data": return_prototype,
+			"data": "打卡成功",
 		});
 			
 	}
@@ -116,7 +144,7 @@ module.exports.jwtverify =  async (req, res, next) => {
 		const messageHandler = require("../helper/MessageHandler");
 		const axios = require("axios");
 		const config = require("../Config");
-		const CustAccountRepository=require("../repositories/CustAccountRepository");
+		const EmpAccountRepository=require("../repositories/EmpAccountRepository");
 		const custRepository = require("../repositories/CustRepository");
 		
 		if(!req.body.hasOwnProperty("data")) throw(new Error("ERROR_LACK_OF_PARAMETER"));
@@ -143,7 +171,7 @@ module.exports.jwtverify =  async (req, res, next) => {
 		debug(jwt_user_data.data);
 		if(jwt_user_data.data.login){
 			let conditions_cust = [{"key":"accounthash","value":jwt_user_data.data.user}];
-			let cust_account=await CustAccountRepository.getCust_Account_and_Custs(conditions_cust);
+			let cust_account=await EmpAccountRepository.getCust_Account_and_Custs(conditions_cust);
 
 			if(cust_account.length<1)
 			{
@@ -205,7 +233,7 @@ module.exports.inviteCust = async (req, res, next) =>
 	{
 		const messageHandler = require("../helper/MessageHandler");
 		const CustRepository = require("../repositories/CustRepository");
-		const CustAccountRepository = require("../repositories/CustAccountRepository");
+		const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 		const uuidV1 = require("uuid/v1");
 		const debug = require("debug")("KumonCheckINApi:CustAccountService.inviteCust");
 		const config = require("../Config");
@@ -248,7 +276,7 @@ module.exports.inviteCust = async (req, res, next) =>
 			let conditions_account = { "account":req.body.data.account_no ,"sino_account":req.body.data.sino_account };
 			// check existed
 			const isCustsExisted = await CustRepository.isCustsExisted(conditions);
-			const isCust_AccountExisted = await CustAccountRepository.isCustAccountsExisted(conditions_account);
+			const isCust_AccountExisted = await EmpAccountRepository.isEmpAccountsExisted(conditions_account);
 			let CheckPass=true;
 			if(!isCustsExisted)
 			{
@@ -324,9 +352,9 @@ module.exports.inviteCust = async (req, res, next) =>
 					"create_date":strtoday,
 					"edit_date":strtoday,
 				};
-				let create_result = await CustAccountRepository.createCust_Account(Cust_Account);
+				let create_result = await EmpAccountRepository.createCust_Account(Cust_Account);
 				let account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account);
-				let create_log_result = await CustAccountRepository.createCust_Account_Log(account_log);
+				let create_log_result = await EmpAccountRepository.createCust_Account_Log(account_log);
 				await axios.post(cust_mailapi,invite_mail_json).then(
 					function (res) 
 					{
@@ -345,7 +373,7 @@ module.exports.inviteCust = async (req, res, next) =>
 			else if(CheckPass)
 			{
 				// get Cust_Account Data
-				const dataCustAccount = await CustAccountRepository.getCust_Account(conditions_account);	
+				const dataCustAccount = await EmpAccountRepository.getCust_Account(conditions_account);	
 				if(dataCustAccount[0].status=="U" || dataCustAccount[0].status=="N")
 				{
 					//UPDATE
@@ -362,7 +390,7 @@ module.exports.inviteCust = async (req, res, next) =>
 						"create_date":strtoday,
 						"edit_date":strtoday,
 					};
-					const set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_account);
+					const set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_account);
 					let Cust_Account_Log = 
 					{
 						"action_type":"I",
@@ -385,7 +413,7 @@ module.exports.inviteCust = async (req, res, next) =>
 						"create_date":strtoday,
 						"edit_date":strtoday,
 					};
-					let create_log_result = await CustAccountRepository.createCust_Account_Log(Cust_Account_Log);
+					let create_log_result = await EmpAccountRepository.createCust_Account_Log(Cust_Account_Log);
 					debug("send mail"+cust_mailapi+"  "+invite_mail_json.receivers+" \n"+invite_mail_json.content);
 					await axios.post(cust_mailapi,invite_mail_json).then(
 						function (res) 
@@ -425,7 +453,7 @@ module.exports.inviteCust = async (req, res, next) =>
  */
 module.exports.url_check= async (req, res, next) =>{
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const debug = require("debug")("KumonCheckINApi:CustAccountService.url_check");
 	const utility=require("../helper/Utility");
 	try
@@ -452,7 +480,7 @@ module.exports.url_check= async (req, res, next) =>{
 			if(inputtype===reset_url)
 			{
 				let conditions_account = { reset_url:inputtoken};
-				isCustsExisted = await CustAccountRepository.isCustAccountsExisted(conditions_account);
+				isCustsExisted = await EmpAccountRepository.isEmpAccountsExisted(conditions_account);
 				debug(isCustsExisted);
 				if(!isCustsExisted)
 				{
@@ -469,7 +497,7 @@ module.exports.url_check= async (req, res, next) =>{
 			else
 			{
 				let conditions_account = { url:inputtoken};
-				isCustsExisted = await CustAccountRepository.isCustAccountsExisted(conditions_account);
+				isCustsExisted = await EmpAccountRepository.isEmpAccountsExisted(conditions_account);
 				if(!isCustsExisted)
 				{
 					throw(new Error("ERROR_URL_NOT_FOUND"));
@@ -498,7 +526,7 @@ module.exports.url_check= async (req, res, next) =>{
  */
 module.exports.resetPassword = async (req, res, next) =>{
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const CustPwdResetRepository = require("../repositories/CustPwdResetRepository");
 	const config=require("../config");
 	//const debug = require("debug")("KumonCheckINApi:CustAccountService.resetPassword");
@@ -584,7 +612,7 @@ module.exports.resetPassword = async (req, res, next) =>{
 			}
 			else
 			{
-				let cust_account=await CustAccountRepository.getCust_Account_and_Custs(condition_account);
+				let cust_account=await EmpAccountRepository.getCust_Account_and_Custs(condition_account);
 				if(cust_account.length===0){
 					throw(new Error("ERROR_ACCOUNT_NOT_EXISTED"));
 				}else if(cust_account[0].status === "U"){
@@ -622,11 +650,11 @@ module.exports.resetPassword = async (req, res, next) =>{
 						};
 						conditions_update.account=inputAccount;
 						conditions_update.sino_account=cust_account[0].sino_account;
-						set_result = await CustAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
+						set_result = await EmpAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
 						for(let INDEX=0;INDEX<cust_account.length;INDEX++)
 						{
 							account_log=utility.createAccountLog("I",req.body.requester,strdatenow,cust_account[INDEX]);
-							create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+							create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 						}
 						await axios.post(cust_mailapi,reset_mail_json).then(
 							function (res) 
@@ -682,7 +710,7 @@ module.exports.resetPassword = async (req, res, next) =>{
 module.exports.matching = async (req, res, next) => 
 {
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	//const debug = require("debug")("KumonCheckINApi:CustAccountService.matching");
 	const config = require("../Config");
 	const axios = require("axios");
@@ -710,7 +738,7 @@ module.exports.matching = async (req, res, next) =>
 			let condition = [{"key":req.body.data.type,"value":inputToken}];
 			let conditions_update = { "account":"" ,"sino_account":""};
 			//select by token and mail 
-			let Cust_Account=await CustAccountRepository.getCust_Account_and_Custs(condition);
+			let Cust_Account=await EmpAccountRepository.getCust_Account_and_Custs(condition);
 			let account_log;
 			let set_result;
 			let create_log_result;
@@ -734,9 +762,9 @@ module.exports.matching = async (req, res, next) =>
 						conditions_update.account=Cust_Account[index].account;
 						conditions_update.sino_account=Cust_Account[index].sino_account;
 						update_Cust_Account.mail_count=Cust_Account[index].mail_count;
-						set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+						set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 						let account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[index]);
-						await CustAccountRepository.createCust_Account_Log(account_log);
+						await EmpAccountRepository.createCust_Account_Log(account_log);
 					}
 					throw(new Error("ERROR_EMAIL_UNMATCH_MUCH"));
 				}
@@ -753,9 +781,9 @@ module.exports.matching = async (req, res, next) =>
 					};
 					conditions_update.account=Cust_Account[0].account;
 					conditions_update.sino_account=Cust_Account[0].sino_account;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[0]);
-					await CustAccountRepository.createCust_Account_Log(account_log);
+					await EmpAccountRepository.createCust_Account_Log(account_log);
 					throw(new Error("ERROR_EMAIL_URL_MATCH_THREE_TIME"));
 				}
 				else if(Cust_Account[0].email!=inputmail)
@@ -769,9 +797,9 @@ module.exports.matching = async (req, res, next) =>
 					conditions_update.account=Cust_Account[0].account;
 					conditions_update.sino_account=Cust_Account[0].sino_account;
 					update_Cust_Account.mail_count=Cust_Account[0].mail_count;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					let account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[0]);
-					await CustAccountRepository.createCust_Account_Log(account_log);
+					await EmpAccountRepository.createCust_Account_Log(account_log);
 					throw(new Error("ERROR_EMAIL_UNMATCH"));
 				}
 				else if(typeof(Cust_Account[0].url_expire)!=undefined && Cust_Account[0].url_expire!="")
@@ -809,9 +837,9 @@ module.exports.matching = async (req, res, next) =>
 							"edit_date":strtoday,
 							"expire_date":strexpire_date,
 						};
-						set_result = await CustAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
+						set_result = await EmpAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
 						account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[0]);
-						create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+						create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 						await axios.post(mailapi,invite_mail_json).then(
 							function (res) 
 							{
@@ -848,7 +876,7 @@ module.exports.matching = async (req, res, next) =>
 module.exports.verify = async (req, res, next) => 
 {
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const debug = require("debug")("KumonCheckINApi:CustAccountService.verify");
 	const config = require("../Config");
 	// const axios = require("axios");
@@ -881,7 +909,7 @@ module.exports.verify = async (req, res, next) =>
 			let condition = [{"key":"email","value":inputmail}];
 			let conditions_update = { "account":"" ,"sino_account":""};
 			//select by email
-			let Cust_Account=await CustAccountRepository.getCust_Account_and_Custs(condition);
+			let Cust_Account=await EmpAccountRepository.getCust_Account_and_Custs(condition);
 			let Cust_Account_Verify;
 			let account_log;
 			let set_result;
@@ -921,9 +949,9 @@ module.exports.verify = async (req, res, next) =>
 						};
 						conditions_update.account=Cust_Account_Verify.account;
 						conditions_update.sino_account=Cust_Account_Verify.sino_account;
-						set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+						set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 						account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account_Verify);
-						create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+						create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 						throw(new Error("ERROR_VERIFY_CODE_INVALID"));
 					}
 					else
@@ -980,9 +1008,9 @@ module.exports.verify = async (req, res, next) =>
 										"token":		Cust_Account_Verify.reset_url,
 									};
 								}
-								set_result = await CustAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
+								set_result = await EmpAccountRepository.set_Cust_Account(update_Account_value,conditions_update);
 								account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account_Verify);
-								create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+								create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 								if(set_result ===0 && create_log_result===0)
 								{
 									throw(new Error("ERROR_WRONG_VERIFY_CODE"));
@@ -1038,9 +1066,9 @@ module.exports.verify = async (req, res, next) =>
 							conditions_update.account=Cust_Account[INDEX].account;
 							conditions_update.sino_account=Cust_Account[INDEX].sino_account;
 							update_Cust_Account.count=Cust_Account[INDEX].count;
-							await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+							await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 							account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[INDEX]);
-							await CustAccountRepository.createCust_Account_Log(account_log);
+							await EmpAccountRepository.createCust_Account_Log(account_log);
 							throw(new Error("ERROR_WRONG_VERIFY_CODE"));
 						}
 						else
@@ -1056,9 +1084,9 @@ module.exports.verify = async (req, res, next) =>
 							};
 							conditions_update.account=Cust_Account[INDEX].account;
 							conditions_update.sino_account=Cust_Account[INDEX].sino_account;
-							await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+							await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 							account_log=utility.createAccountLog("I",req.body.requester,strtoday,Cust_Account[INDEX]);
-							await CustAccountRepository.createCust_Account_Log(account_log);
+							await EmpAccountRepository.createCust_Account_Log(account_log);
 							throw(new Error("ERROR_VERIFY_CODE_INVALID"));
 						}
 					}
@@ -1081,7 +1109,7 @@ module.exports.verify = async (req, res, next) =>
 module.exports.resetpassword = async (req, res, next) => 
 {
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const debug = require("debug")("KumonCheckINApi:CustAccountService.resetpassword");
 	const config = require("../Config");
 	let dateFormat = require("date-format");
@@ -1114,7 +1142,7 @@ module.exports.resetpassword = async (req, res, next) =>
 			let passwordsalt=RandomPWSalt;
 			let new_salt=utility.randomNumber(9999999999999999);
 			let condition_by_account = [{"key":"Cust_Account.account","value":inputAccount},{"key":"Cust_Account.sino_account","value":inputSinoAccount}];
-			let Cust_Account_without_password=await CustAccountRepository.getCust_Account_and_Custs(condition_by_account);
+			let Cust_Account_without_password=await EmpAccountRepository.getCust_Account_and_Custs(condition_by_account);
 			//get password salt
 			if(Cust_Account_without_password.length<1)
 			{
@@ -1129,7 +1157,7 @@ module.exports.resetpassword = async (req, res, next) =>
 			let condition = [{"key":"Cust_Account.account","value":inputAccount},{"key":"Cust_Account.sino_account","value":inputSinoAccount},{"key":"Cust_Account.password","value":oldPass}];
 			let conditions_update = { "account":"" ,"sino_account":""};
 			//select by account
-			let Cust_Account=await CustAccountRepository.getCust_Account_and_Custs(condition);
+			let Cust_Account=await EmpAccountRepository.getCust_Account_and_Custs(condition);
 			let account_log;
 			let set_result;
 			let create_log_result;
@@ -1153,9 +1181,9 @@ module.exports.resetpassword = async (req, res, next) =>
 					};
 					conditions_update.account=inputAccount;
 					conditions_update.sino_account=inputSinoAccount;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtodatetime,Cust_Account[0]);
-					create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+					create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 					if(set_result ===0 && create_log_result===0){
 						throw(new Error("ERROR_INTERNAL_SERVER_ERROR"));
 					}else{
@@ -1205,7 +1233,7 @@ module.exports.resetpassword = async (req, res, next) =>
 module.exports.verifypassword = async (req, res, next) => 
 {
 	const messageHandler = require("../helper/MessageHandler");
-	const CustAccountRepository = require("../repositories/CustAccountRepository");
+	const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const CustPwdResetRepository=require("../repositories/CustPwdResetRepository");
 	const debug = require("debug")("KumonCheckINApi:CustAccountService.verifypassword");
 	let dateFormat = require("date-format");
@@ -1281,8 +1309,8 @@ module.exports.verifypassword = async (req, res, next) =>
 				throw(new Error("ERROR_PASSWORD_TOO_SHORT"));
 			}
 			//select by url
-			let Cust_Account=await CustAccountRepository.getCust_Account_and_Custs(condition);
-			let Cust_Account_verify=await CustAccountRepository.getCust_Account_and_Custs(condition_verify);
+			let Cust_Account=await EmpAccountRepository.getCust_Account_and_Custs(condition);
+			let Cust_Account_verify=await EmpAccountRepository.getCust_Account_and_Custs(condition_verify);
 			if(Cust_Account.length<1)
 			{
 				create_reser_pwd_result = await CustPwdResetRepository.createCustPwdReset(new_Reset_Pwd_Log);
@@ -1335,9 +1363,9 @@ module.exports.verifypassword = async (req, res, next) =>
 					};
 					conditions_update.account=Cust_Account[INDEX].account;
 					conditions_update.sino_account=Cust_Account[INDEX].sino_account;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtodaytime,Cust_Account[INDEX]);
-					create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+					create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 					throw(new Error("ERROR_WRONG_VERIFY_CODE"));
 				}
 			}
@@ -1355,9 +1383,9 @@ module.exports.verifypassword = async (req, res, next) =>
 					};
 					conditions_update.account=Cust_Account[0].account;
 					conditions_update.sino_account=Cust_Account[0].sino_account;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtodaytime,Cust_Account[0]);
-					create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+					create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 					throw(new Error("ERROR_ACCOUNT_STATUS_V"));
 				}
 				else if(Cust_Account_verify[0].mail_count>2)
@@ -1376,9 +1404,9 @@ module.exports.verifypassword = async (req, res, next) =>
 					};
 					conditions_update.account=Cust_Account_verify[0].account;
 					conditions_update.sino_account=Cust_Account_verify[0].sino_account;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtodaytime,Cust_Account_verify[0]);
-					create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+					create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 					throw(new Error("ERROR_VERIFY_CODE_INVALID"));
 				}
 				else if(Cust_Account_verify[0].reset_url_expire<strtodaytime)
@@ -1413,9 +1441,9 @@ module.exports.verifypassword = async (req, res, next) =>
 					};
 					conditions_update.account=Cust_Account_verify[0].account;
 					conditions_update.sino_account=Cust_Account_verify[0].sino_account;
-					set_result = await CustAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
+					set_result = await EmpAccountRepository.set_Cust_Account(update_Cust_Account,conditions_update);
 					account_log=utility.createAccountLog("I",req.body.requester,strtodaytime,Cust_Account_verify[0]);
-					create_log_result= await CustAccountRepository.createCust_Account_Log(account_log);
+					create_log_result= await EmpAccountRepository.createCust_Account_Log(account_log);
 					
 					account_changepassword_mail_json=mailjson.password_reset_mail(Cust_Account_verify[0].email,Cust_Account_verify[0].account,"");
 					account_changepassword_mail_json_service=mailjson.password_reset_mail_service(mailjson.adminEmail(),Cust_Account_verify[0].name,Cust_Account_verify[0].account);

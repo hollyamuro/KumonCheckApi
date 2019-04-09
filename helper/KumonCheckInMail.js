@@ -7,8 +7,8 @@
  */
 module.exports.adminEmail = () => 
 {
-	let maillist="hollyamuro@gmail.com;elane1108@gmail.com";
-	let maillist_prod="hollyamuro@gmail.com;elane1108@gmail.com";
+	let maillist=["hollyamuro@gmail.com","elane1108@gmail.com"];
+	let maillist_prod=["hollyamuro@gmail.com","elane1108@gmail.com"];
 	if(process.env.NODE_ENV !== "production")
 		return maillist;
 	else
@@ -55,7 +55,7 @@ module.exports.CheckInmail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -82,7 +82,7 @@ module.exports.resetpassmail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -105,7 +105,7 @@ module.exports.resetpassmail_service = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -133,7 +133,7 @@ module.exports.verifycodemail = (receivers,account,verifycode) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -161,7 +161,7 @@ module.exports.resetverifycodemail = (receivers,account,verifycode) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -189,7 +189,7 @@ module.exports.lock_password_fail_mail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -213,7 +213,7 @@ module.exports.lock_password_fail_mail_service = (receivers,name,account) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -240,7 +240,7 @@ module.exports.cancel_account_mail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -264,7 +264,7 @@ module.exports.cancel_account_mail_sevice = (receivers,name,account) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -291,7 +291,7 @@ module.exports.account_active_mail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -316,7 +316,7 @@ module.exports.account_active_mail_service = (receivers,name,account) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -343,7 +343,7 @@ module.exports.password_reset_mail = (receivers,account,url) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -367,7 +367,7 @@ module.exports.password_reset_mail_service = (receivers,name,account) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};
@@ -391,7 +391,7 @@ module.exports.malicious_mail_service = (receivers,ip,account) =>
 		,"attachments": [
 			{
 				"filename": "logo.png",
-				"path": "./KumonCheckINData/logo.png"
+				"path": "./public/images/logo.png"
 			}
 		]
 	};

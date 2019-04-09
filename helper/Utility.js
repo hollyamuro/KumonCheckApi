@@ -55,7 +55,7 @@ module.exports.randomNumber=function(max)
  */
 module.exports.createAccountLog=function(type,user,strtoday,Cust_Account)
 {
-	// const CustAccountRepository = require("../repositories/CustAccountRepository");
+	// const EmpAccountRepository = require("../repositories/EmpAccountRepository");
 	const utility = require("./Utility");
 	const debug = require("debug")("KumonCheckINApi:Utility.createAccountLog");
 	// let create_log_result;
