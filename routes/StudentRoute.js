@@ -10,7 +10,6 @@
  * @param  {} app
  */
 module.exports = (app) => {
-	const StudentService = require("../services/StudentService");
-	app.route("/api/student/checkin").post(StudentService.checkin);
+
 	
 };

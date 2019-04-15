@@ -99,7 +99,7 @@ module.exports.CheckIn = (conditions,values) => {
  * 刪除打卡
  * @param  {Object} conditions 刪除條件
  */
-module.exports.destroyCusts = (conditions) => {
+module.exports.destroyCheckIn = (conditions) => {
 	try
 	{
 		const ormDB = require("../helper/OrmDB");
