@@ -30,7 +30,7 @@ module.exports = (app) => {
 	app.route("/api/bank/KumonCheckIN/safekeeping/holding").post(KumonCheckINBankWebService.getSafekeepingHolding);
 	app.route("/api/bank/KumonCheckIN/safekeeping/balance").post(KumonCheckINBankWebService.getSafekeepingBalance);
 
-	const JwtKeyService = require("../services/JwtKeyService");
-	app.route("/api/cust/jwt_key_create").post(JwtKeyService.updateJwtKey);
+	//const JwtKeyService = require("../services/JwtKeyService");
+	//app.route("/api/cust/jwt_key_create").post(JwtKeyService.updateJwtKey);
 	
 };

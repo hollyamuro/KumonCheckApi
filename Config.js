@@ -20,7 +20,7 @@ module.exports = {
 			KumonCheckIN: {
 				database: "KUMONCHICK",
 				username: "apuser",
-				password: "Elane1108",
+				password: "1108",
 				options: {
 					host: "localhost",
 					dialect: "mssql",

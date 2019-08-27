@@ -33,7 +33,7 @@ module.exports.checkin =  async (req, res, next) =>
 	if(!req.body.data.hasOwnProperty("ID") || req.body.data.ID === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.data.hasOwnProperty("office") || req.body.data.office === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
 	if(!req.body.data.hasOwnProperty("token") || req.body.data.token === "") throw(new Error("ERROR_LACK_OF_PARAMETER"));
-	//prepare data
+	//prepare dataa
 	let strtoday = dateFormat.asString("yyyy/MM/dd hh:mm:ss", new Date());
 	let checkinconditions={"date":strtoday,"ID":req.body.data.ID,'office':req.body.data.office,"type":"kumon"};//學生預設kumon，employee則抓type欄位
 	try{
@@ -101,13 +101,13 @@ module.exports.checkin =  async (req, res, next) =>
 		let mailTransport = nodemailer.createTransport({
 			host:config[process.env.NODE_ENV].Cust_MailServer.host, 
 			port: config[process.env.NODE_ENV].Cust_MailServer.port,
-			secure:true,
+			secure: true, // this is true as port is 465
 			auth: {
 				user: config[process.env.NODE_ENV].Cust_MailServer.user,
 				pass: config[process.env.NODE_ENV].Cust_MailServer.password
 			}
 			});
-		debug("寄送郵件");
+		debug("寄送郵件 使用"+config[process.env.NODE_ENV].Cust_MailServer.user+"密碼"+config[process.env.NODE_ENV].Cust_MailServer.password);
 		for(let i=0;i<CheckInmail_json.length;i++)
 		{
 			await mailTransport.sendMail(CheckInmail_json[i], (error, info) => 
