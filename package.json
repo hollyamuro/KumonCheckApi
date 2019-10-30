@@ -44,7 +44,7 @@
     "node-cron": "^1.2.1",
     "nodemailer": "^6.1.0",
     "numeral": "^2.0.6",
-    "sequelize": "^4.37.10",
+    "sequelize": "^5.15.1",
     "serve-favicon": "~2.4.2",
     "tedious": "^2.6.1",
     "uuid": "^3.2.1"
